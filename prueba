@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Horario Universitario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FFD60A; /* El amarillo de tu calculadora */
+            --header-bg: #e67e22; /* El naranja de tu imagen */
+            --border: #ddd;
+        }
+
+        body {
+            font-family: 'Oswald', sans-serif;
+            background-color: white; /* Fondo blanco como pediste */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 600px;
+        }
+
+        th {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        td {
+            border: 1px solid var(--border);
+            padding: 10px;
+            height: 60px;
+            vertical-align: middle;
+            transition: background 0.3s;
+        }
+
+        /* Columna de Módulos */
+        .col-modulo {
+            background-color: #f9f9f9;
+            font-weight: bold;
+            width: 120px;
+            color: #555;
+        }
+
+        .hora-texto {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: normal;
+            color: #888;
+        }
+
+        /* Celdas editables */
+        .celda-editable {
+            width: 100%;
+            height: 100%;
+            outline: none;
+            font-size: 0.95rem;
+            color: #333;
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        .celda-editable:focus {
+            background-color: #fffde7; /* Brillo amarillo al escribir */
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📅 Horario de Clases</h1>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Módulos / Horas</th>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoHorario">
+                </tbody>
+        </table>
+    </div>
+
+    <p class="instructions">Haz clic en cualquier celda para escribir. Se guarda automáticamente al salir.</p>
+</div>
+
+<script>
+    // Datos de los módulos según tu imagen
+    const bloques = [
+        { mod: "01-02", hora: "8:15 - 9:35" },
+        { mod: "03-04", hora: "9:50 - 11:10" },
+        { mod: "05-06", hora: "11:25 - 12:45" },
+        { mod: "07-08", hora: "13:45 - 15:05" },
+        { mod: "09-10", hora: "15:20 - 16:40" },
+        { mod: "11-12", hora: "16:55 - 18:15" }
+    ];
+
+    function inicializarHorario() {
+        const tbody = document.getElementById("cuerpoHorario");
+        const datosGuardados = JSON.parse(localStorage.getItem("miHorarioU")) || {};
+
+        bloques.forEach(b => {
+            const tr = document.createElement("tr");
+
+            // Celda de hora/módulo
+            const tdModulo = document.createElement("td");
+            tdModulo.className = "col-modulo";
+            tdModulo.innerHTML = `${b.mod} <span class="hora-texto">${b.hora}</span>`;
+            tr.appendChild(tdModulo);
+
+            // Celdas de días (1=Lunes, 5=Viernes)
+            for (let dia = 1; dia <= 5; dia++) {
+                const td = document.createElement("td");
+                const idUnico = `celda-${b.mod}-${dia}`;
+                
+                td.innerHTML = `
+                    <div contenteditable="true" 
+                         class="celda-editable" 
+                         id="${idUnico}" 
+                         onblur="guardarCambios()">
+                         ${datosGuardados[idUnico] || ""}
+                    </div>
+                `;
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        });
+    }
+
+    function guardarCambios() {
+        const celdas = document.querySelectorAll(".celda-editable");
+        let datosHorario = {};
+        
+        celdas.forEach(celda => {
+            datosHorario[celda.id] = celda.innerHTML;
+        });
+
+        localStorage.setItem("miHorarioU", JSON.stringify(datosHorario));
+        console.log("Horario guardado automáticamente.");
+    }
+
+    // Cargar horario al abrir
+    window.onload = inicializarHorario;
+</script>
+
+</body>
+</html>
