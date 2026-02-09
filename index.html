@@ -7,18 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FFD60A; /* Amarillo USACH */
+            --primary: #FFD60A; /* Amarillo Exacto de tu Horario */
             --text: #333;
             --bg-body: #ffffff;
-            --danger: #ff4444;
-            --warning: #ffbb33;
-            --success: #00C851;
-            --info: #33b5e5;
-            --purple: #aa66cc;
-            
-            /* Colores para inicio y fin de eventos administrativos */
-            --uni-start: #4285F4; /* Azul Google */
-            --uni-end: #FB8C00;   /* Naranja Alerta */
+            --danger: #d32f2f;
+            --gray-holiday: #f0f0f0; /* Gris de tu Horario */
+            --gray-text: #888;
         }
 
         body {
@@ -37,18 +31,18 @@
             width: 100%;
             display: grid;
             grid-template-columns: 1.5fr 1fr;
-            gap: 25px; /* Más espacio */
+            gap: 25px;
             align-items: start;
             margin-bottom: 30px;
         }
 
-        /* --- CALENDARIO REDONDEADO --- */
+        /* --- CALENDARIO ESTILO HORARIO --- */
         .calendar-box {
             background: white;
-            border-radius: 20px; /* Vuelve el borde redondo */
+            border-radius: 20px; /* Redondo como pediste */
             padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Sombra suave */
-            border: 1px solid #f0f0f0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
         }
 
         .header {
@@ -67,11 +61,11 @@
         }
 
         .nav-btn {
-            background: #222;
+            background: #333;
             color: white;
             border: none;
             padding: 8px 16px;
-            border-radius: 10px; /* Botones redondos */
+            border-radius: 8px;
             cursor: pointer;
             font-family: 'Oswald';
             text-transform: uppercase;
@@ -79,17 +73,17 @@
             font-size: 0.8rem;
             transition: 0.2s;
         }
-        .nav-btn:hover { background: #444; transform: scale(1.05); }
+        .nav-btn:hover { opacity: 0.8; }
 
         .grid-days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px; /* Espacio entre días */
+            gap: 8px;
         }
 
         .day-name {
             font-weight: bold;
-            color: #888;
+            color: #666;
             font-size: 0.8rem;
             text-align: center;
             padding-bottom: 15px;
@@ -98,8 +92,8 @@
 
         .day-cell {
             height: 70px;
-            border-radius: 12px; /* Días redondeados */
-            border: 1px solid #f8f8f8;
+            border-radius: 12px;
+            border: 1px solid #f9f9f9;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -112,60 +106,53 @@
         }
 
         .day-cell:not(.past):hover { 
-            background-color: #fffde7; 
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-color: var(--primary);
         }
         
         .day-cell.today { 
-            border: 2px solid var(--primary); 
+            border: 2px solid #333; /* Borde negro para destacar hoy */
             font-weight: bold; 
-            background: #fffbea;
         }
         
         .day-cell.past { 
-            background-color: #fcfcfc; 
             color: #ddd; 
             cursor: default; 
-            border-color: transparent;
         }
         
-        /* Feriados */
+        /* --- ESTILOS DE BLOQUE (Colores sólidos) --- */
+        
+        /* Feriados: Gris (Como la columna modulo) */
         .day-cell.holiday { 
-            color: var(--danger); 
-            background-color: #ffebee;
-            border-color: #ffcdd2;
+            background-color: var(--gray-holiday);
+            color: #999;
+            border: none;
         }
 
-        /* --- NUEVO: Estilos solo para Inicio y Fin --- */
-        .day-cell.uni-start {
-            background-color: var(--uni-start);
-            color: white;
-            border: none;
-        }
-        .day-cell.uni-end {
-            background-color: var(--uni-end);
-            color: white;
+        /* Eventos U: Amarillo (Bloque completo) */
+        .day-cell.uni-highlight {
+            background-color: var(--primary);
+            color: #000;
+            font-weight: bold;
             border: none;
         }
         
-        /* Indicador de evento personal */
+        /* Indicador de TUS eventos (Rayita abajo) */
         .event-indicator {
-            width: 6px;
-            height: 6px;
-            background: var(--text);
+            width: 20px;
+            height: 3px;
+            background: #000;
             margin-top: 4px;
-            border-radius: 50%; /* Puntito redondo */
+            border-radius: 2px;
         }
-        /* Cambiar color del puntito si el fondo es oscuro */
-        .uni-start .event-indicator, .uni-end .event-indicator { background: white; }
 
         /* PANEL LATERAL */
         .events-panel {
             background: #ffffff;
-            border-radius: 20px; /* Redondo */
+            border-radius: 20px;
             padding: 25px;
-            border: 2px solid var(--primary);
+            border: 2px solid var(--primary); /* Borde amarillo */
             max-height: 550px;
             display: flex;
             flex-direction: column;
@@ -183,12 +170,11 @@
         .scroll-area { overflow-y: auto; padding-right: 5px; }
         .scroll-area::-webkit-scrollbar { width: 5px; }
         .scroll-area::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
-        .scroll-area::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
         .event-card {
             background: #fff;
             padding: 15px;
-            border-radius: 12px; /* Tarjetas redondas */
+            border-radius: 12px;
             margin-bottom: 12px;
             border-left: 5px solid #ccc;
             position: relative;
@@ -210,13 +196,13 @@
         .urgent { border-left-color: var(--danger); }
         .urgent .days-left { color: var(--danger); }
         
-        .soon { border-left-color: var(--warning); }
-        .soon .days-left { color: #f9a825; }
+        .soon { border-left-color: var(--primary); } /* Ahora usa amarillo para "pronto" */
+        .soon .days-left { color: #dcb000; }
         
-        .chill { border-left-color: var(--success); }
+        .chill { border-left-color: var(--success); } /* Verde relajado */
         .chill .days-left { color: var(--success); }
 
-        /* --- PANEL DE AVISOS (Mensajes Divertidos) --- */
+        /* --- AVISOS DIVERTIDOS (Abajo) --- */
         #alert-section {
             width: 100%;
             max-width: 950px;
@@ -224,13 +210,13 @@
         }
 
         .alert-box {
-            background: #222; /* Negro elegante */
+            background: #222;
             color: white;
             padding: 25px;
             margin-bottom: 20px;
-            border-radius: 15px; /* Redondo */
-            border-left: 8px solid var(--primary);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            border-radius: 20px;
+            border-left: 10px solid var(--primary);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -252,29 +238,28 @@
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- MODAL RESTAURADO Y MEJORADO --- */
+        /* --- MODAL --- */
         #addModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); /* Efecto moderno */
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(5px);
             z-index: 100; justify-content: center; align-items: center;
         }
         .modal-content {
-            background: white; padding: 35px; border-radius: 25px; width: 320px;
+            background: white; padding: 35px; border-radius: 20px; width: 320px;
             text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            border: 1px solid #f0f0f0;
-            position: relative;
+            border: 1px solid #eee;
         }
-        .modal-content h3 { text-transform: uppercase; margin-top: 0; margin-bottom: 5px; }
         
-        /* Caja especial para mostrar el evento universitario en el modal */
+        /* Caja para mostrar evento universitario en el modal */
         #uniEventDisplay {
-            background: #e3f2fd;
-            color: #1565c0;
-            padding: 10px;
-            border-radius: 10px;
+            background: var(--primary);
+            color: #000;
+            padding: 15px;
+            border-radius: 12px;
             margin-bottom: 20px;
             font-size: 0.9rem;
-            display: none; /* Se activa con JS */
+            font-weight: bold;
+            display: none;
         }
         
         .form-group { margin-bottom: 20px; text-align: left; }
@@ -289,12 +274,10 @@
         .modal-btns button { 
             border: none; padding: 12px 25px; cursor: pointer; border-radius: 8px;
             font-family: 'Oswald'; text-transform: uppercase; font-weight: bold; 
-            transition: 0.2s;
         }
         .btn-cancel { background: #f0f0f0; color: #555; }
-        .btn-cancel:hover { background: #e0e0e0; }
-        .btn-save { background: var(--primary); color: #000; box-shadow: 0 4px 10px rgba(255, 214, 10, 0.3); }
-        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255, 214, 10, 0.4); }
+        .btn-save { background: var(--primary); color: #000; }
+        .btn-save:hover { opacity: 0.9; }
 
         @media (max-width: 768px) {
             .main-container { grid-template-columns: 1fr; }
@@ -312,10 +295,10 @@
         </div>
         <div class="grid-days" id="calendarGrid"></div>
         
-        <div style="margin-top:20px; font-size:0.7rem; color:#888; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
-            <span style="display:flex; align-items:center;"><div style="width:8px; height:8px; background:var(--danger); border-radius:50%; margin-right:5px;"></div> Feriado</span>
-            <span style="display:flex; align-items:center;"><div style="width:8px; height:8px; background:var(--uni-start); border-radius:50%; margin-right:5px;"></div> Inicio Evento</span>
-            <span style="display:flex; align-items:center;"><div style="width:8px; height:8px; background:var(--uni-end); border-radius:50%; margin-right:5px;"></div> Fin Evento</span>
+        <div style="margin-top:20px; font-size:0.75rem; color:#888; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
+            <span style="display:flex; align-items:center;"><div style="width:12px; height:12px; background:var(--gray-holiday); border-radius:3px; margin-right:5px;"></div> Feriado</span>
+            <span style="display:flex; align-items:center;"><div style="width:12px; height:12px; background:var(--primary); border-radius:3px; margin-right:5px;"></div> Evento U</span>
+            <span style="display:flex; align-items:center;"><div style="width:12px; height:3px; background:#000; margin-right:5px;"></div> Mi Evaluación</span>
         </div>
     </div>
 
@@ -359,53 +342,22 @@
 <script>
     let nav = 0;
     let clickedDate = null;
-    let events = localStorage.getItem('astroEvents_v6') ? JSON.parse(localStorage.getItem('astroEvents_v6')) : [];
+    let events = localStorage.getItem('astroEvents_final') ? JSON.parse(localStorage.getItem('astroEvents_final')) : [];
 
-    // --- DATOS UNIVERSITARIOS USACH 2026 ---
-    
-    // 1. Feriados
+    // --- DATOS USACH 2026 ---
     const holidays = [
         "2026-05-01", "2026-05-21", "2026-06-20", "2026-07-16", "2026-08-15",
         "2026-10-12", "2026-10-31", "2026-11-01", "2026-12-08", "2026-12-25"
     ];
 
-    // 2. Eventos Académicos + MENSAJES DIVERTIDOS (Sin Emojis)
     const academicEvents = [
-        { 
-            start: "2026-03-16", end: "2026-03-29", 
-            title: "Matrícula en Línea", 
-            msg: "La universidad reclama su tributo semestral. Paga la matrícula antes de que el sistema te borre del mapa académico." 
-        },
-        { 
-            start: "2026-03-19", end: "2026-03-29", 
-            title: "Inscripción de Asignaturas", 
-            msg: "Comienzan los Juegos del Hambre. Que la velocidad de tu internet te acompañe para conseguir cupo en esa sección." 
-        },
-        { 
-            start: "2026-03-30", end: "2026-04-10", 
-            title: "Inscripción Manual", 
-            msg: "La última esperanza para los que el sistema ignoró. Si te faltan ramos, es hora de rogarle al jefe de carrera." 
-        },
-        { 
-            start: "2026-05-18", end: "2026-05-23", 
-            title: "Receso Docente", 
-            msg: "Soldado, ha llegado el momento de descansar. Cierra los libros, baja el lápiz y recupera esas horas de sueño perdidas." 
-        },
-        { 
-            start: "2026-05-29", end: "2026-05-29", 
-            title: "Límite Retiro Temporal", 
-            msg: "Si sientes que el barco se hunde, este es el último bote salvavidas disponible sin dar explicaciones." 
-        },
-        { 
-            start: "2026-09-14", end: "2026-09-17", 
-            title: "Receso Fiestas Patrias", 
-            msg: "La constante de integración es cero por esta semana. Cómete una empanada y olvida la física cuántica por unos días." 
-        },
-        { 
-            start: "2026-08-20", end: "2026-09-20", 
-            title: "Toma de Ramos 2do Semestre", 
-            msg: "Ronda dos. Elige tus batallas (y tus ramos) con sabiduría. Evita las ventanas eternas en tu horario." 
-        }
+        { start: "2026-03-16", end: "2026-03-29", title: "Matrícula en Línea", msg: "La universidad reclama su tributo semestral. Paga la matrícula antes de que el sistema te borre del mapa académico." },
+        { start: "2026-03-19", end: "2026-03-29", title: "Inscripción de Asignaturas", msg: "Comienzan los Juegos del Hambre. Que la velocidad de tu internet te acompañe para conseguir cupo en esa sección." },
+        { start: "2026-03-30", end: "2026-04-10", title: "Inscripción Manual", msg: "La última esperanza para los que el sistema ignoró. Si te faltan ramos, es hora de rogarle al jefe de carrera." },
+        { start: "2026-05-18", end: "2026-05-23", title: "Receso Docente", msg: "Soldado, ha llegado el momento de descansar. Cierra los libros, baja el lápiz y recupera esas horas de sueño perdidas." },
+        { start: "2026-05-29", end: "2026-05-29", title: "Límite Retiro Temporal", msg: "Si sientes que el barco se hunde, este es el último bote salvavidas disponible sin dar explicaciones." },
+        { start: "2026-09-14", end: "2026-09-17", title: "Receso Fiestas Patrias", msg: "La constante de integración es cero por esta semana. Cómete una empanada y olvida la física cuántica por unos días." },
+        { start: "2026-08-20", end: "2026-09-20", title: "Toma de Ramos 2do Semestre", msg: "Ronda dos. Elige tus batallas (y tus ramos) con sabiduría. Evita las ventanas eternas en tu horario." }
     ];
 
     const containerModal = document.getElementById('addModal');
@@ -414,10 +366,8 @@
 
     function load() {
         renderAlerts();
-
         const dt = new Date();
         const today = new Date(); today.setHours(0,0,0,0);
-
         if (nav !== 0) dt.setMonth(new Date().getMonth() + nav);
 
         const month = dt.getMonth();
@@ -448,22 +398,19 @@
 
                 square.innerText = dayNum;
 
-                // 1. Marcar Feriados
+                // 1. Feriados (GRIS)
                 if (holidays.includes(dateStr)) square.classList.add('holiday');
 
-                // 2. Marcar Eventos Académicos (SOLO INICIO Y FIN)
-                // Buscamos si hay un evento que EMPIECE hoy
+                // 2. Eventos U (AMARILLO BLOQUE) - Solo inicio y fin
                 const startEvent = academicEvents.find(e => e.start === dateStr);
-                // Buscamos si hay un evento que TERMINE hoy
                 const endEvent = academicEvents.find(e => e.end === dateStr);
 
                 if (startEvent) {
-                    square.classList.add('uni-start');
-                    // Guardamos el titulo en el elemento para usarlo al hacer click
+                    square.classList.add('uni-highlight');
                     square.dataset.uniTitle = "INICIO: " + startEvent.title;
                 } else if (endEvent) {
-                    square.classList.add('uni-end');
-                    square.dataset.uniTitle = "TERMINO: " + endEvent.title;
+                    square.classList.add('uni-highlight');
+                    square.dataset.uniTitle = "TÉRMINO: " + endEvent.title;
                 }
 
                 // 3. Hoy
@@ -474,12 +421,11 @@
                 if (cellDateObj < today) {
                     square.classList.add('past');
                 } else {
-                    // Pasar el título universitario si existe (o null si no)
                     const uniTitle = square.dataset.uniTitle || null;
                     square.onclick = () => openModal(dateStr, uniTitle);
                 }
                 
-                // 5. Indicador de Eventos Personales
+                // 5. Tus Eventos (RAYA NEGRA ABAJO)
                 const dayEvents = events.filter(e => e.date === dateStr);
                 if (dayEvents.length > 0) {
                     const indicator = document.createElement('div');
@@ -495,25 +441,20 @@
         renderList();
     }
 
-    // --- RENDERIZADO DE ALERTAS (TEXTO DIVERTIDO) ---
     function renderAlerts() {
         const today = new Date();
-        // today.setFullYear(2026, 2, 19); // DESCOMENTAR PARA PROBAR (Ej: 19 de Marzo)
+        // today.setFullYear(2026, 2, 19); // DESCOMENTAR PARA PROBAR
 
         alertSection.innerHTML = ''; 
-
         academicEvents.forEach(evt => {
             const start = new Date(evt.start + 'T00:00:00');
             const end = new Date(evt.end + 'T23:59:59');
-            
-            // Mostrar desde 7 días antes hasta que termine
             const alertStart = new Date(start);
             alertStart.setDate(start.getDate() - 7);
 
             if (today >= alertStart && today <= end) {
                 const box = document.createElement('div');
                 box.className = 'alert-box';
-                
                 let timeText = "ESTÁ SUCEDIENDO";
                 if (today < start) {
                     const diff = Math.ceil((start - today) / (1000*60*60*24));
@@ -524,7 +465,7 @@
                     <div class="alert-title">${evt.title} // ${timeText}</div>
                     <div class="alert-msg">${evt.msg}</div>
                     <div style="font-size:0.8rem; margin-top:10px; opacity:0.6; font-style:italic;">
-                        Desde el ${evt.start.split('-').reverse().join('/')} al ${evt.end.split('-').reverse().join('/')}
+                        ${evt.start.split('-').reverse().join('/')} - ${evt.end.split('-').reverse().join('/')}
                     </div>
                 `;
                 alertSection.appendChild(box);
@@ -532,13 +473,11 @@
         });
     }
 
-    // --- MODAL ---
     function openModal(dateStr, uniTitle) {
         clickedDate = dateStr;
         document.getElementById('modalDateDisplay').innerText = dateStr.split('-').reverse().join('/');
         document.getElementById('inputCourse').value = "";
         
-        // MOSTRAR TITULO DEL EVENTO SI EXISTE
         if (uniTitle) {
             uniEventDisplay.style.display = 'block';
             uniEventDisplay.innerText = "¡ATENCIÓN! " + uniTitle;
@@ -555,22 +494,17 @@
     function saveEvent() {
         const course = document.getElementById('inputCourse').value;
         const type = document.getElementById('inputType').value;
-        
-        if (!course.trim()) {
-            // Un alert nativo pequeño por si acaso
-            alert("Falta el nombre de la asignatura");
-            return;
-        }
+        if (!course.trim()) return alert("Falta el nombre de la asignatura");
 
         events.push({ id: Date.now(), date: clickedDate, type: type, course: course });
-        localStorage.setItem('astroEvents_v6', JSON.stringify(events));
+        localStorage.setItem('astroEvents_final', JSON.stringify(events));
         closeModal();
         load();
     }
 
     function deleteEvent(id) {
         events = events.filter(e => e.id !== id);
-        localStorage.setItem('astroEvents_v6', JSON.stringify(events));
+        localStorage.setItem('astroEvents_final', JSON.stringify(events));
         load();
     }
 
@@ -578,7 +512,6 @@
         const list = document.getElementById('countdownList');
         list.innerHTML = '';
         const today = new Date(); today.setHours(0,0,0,0);
-        
         const sorted = events.filter(e => new Date(e.date+'T00:00:00') >= today)
                              .sort((a,b) => new Date(a.date) - new Date(b.date));
 
@@ -609,12 +542,7 @@
     }
 
     function changeMonth(dir) { nav += dir; load(); }
-    
-    // Cerrar si clic afuera
-    window.onclick = function(e) { 
-        if(e.target == containerModal) closeModal(); 
-    }
-
+    window.onclick = function(e) { if(e.target == containerModal) closeModal(); }
     load();
 </script>
 
