@@ -13,6 +13,7 @@
             --danger: #ff4444;
             --warning: #ffbb33;
             --success: #00C851;
+            --disabled: #e0e0e0;
         }
 
         body {
@@ -32,6 +33,7 @@
             grid-template-columns: 1.5fr 1fr;
             gap: 20px;
             align-items: start;
+            position: relative; /* Para el modal */
         }
 
         /* CALENDARIO */
@@ -91,10 +93,25 @@
             cursor: pointer;
             font-size: 1rem;
             transition: 0.2s;
+            position: relative;
         }
 
-        .day-cell:hover { background-color: #fffde7; }
+        .day-cell:not(.past):hover { background-color: #fffde7; }
         .day-cell.today { border: 2px solid var(--primary); font-weight: bold; }
+        
+        /* Días pasados */
+        .day-cell.past {
+            background-color: #f9f9f9;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Feriados */
+        .day-cell.holiday {
+            background-color: #ffebee;
+            color: var(--danger);
+            border-color: #ffcdd2;
+        }
         
         .event-indicator {
             width: 80%;
@@ -125,7 +142,6 @@
             overflow-y: auto;
             padding-right: 5px;
         }
-
         .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
@@ -146,7 +162,8 @@
             border: none;
             color: #ccc;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
         .delete-btn:hover { color: var(--danger); }
 
@@ -157,6 +174,47 @@
         .urgent { border-left-color: var(--danger); color: var(--danger); }
         .soon { border-left-color: var(--warning); color: #b08900; }
         .chill { border-left-color: var(--success); color: var(--success); }
+
+        /* --- MODAL PARA AGREGAR EVENTO --- */
+        #addModal {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 300px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .modal-content h3 { margin-top: 0; }
+        
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #666; }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Oswald';
+            box-sizing: border-box; /* Para que el padding no rompa el ancho */
+        }
+
+        .modal-btns { display: flex; gap: 10px; justify-content: center; }
+        .btn-cancel { background: #eee; color: #333; }
+        .btn-save { background: var(--primary); color: #333; font-weight: bold; }
+        .modal-btns button {
+            border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-family: 'Oswald';
+        }
 
         @media (max-width: 768px) {
             .main-container { grid-template-columns: 1fr; }
@@ -183,13 +241,56 @@
 
 </div>
 
+<div id="addModal">
+    <div class="modal-content">
+        <h3>Nuevo Evento</h3>
+        <p id="modalDateDisplay" style="color:var(--primary); font-weight:bold;"></p>
+        
+        <div class="form-group">
+            <label>Tipo de Evaluación:</label>
+            <select id="inputType">
+                <option value="Evaluación Oral">Evaluación Oral</option>
+                <option value="Evaluación Escrita">Evaluación Escrita</option>
+                <option value="Entrega de Trabajo">Entrega de Trabajo</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Curso / Ramo:</label>
+            <input type="text" id="inputCourse" placeholder="Ej: Mecánica Cuántica">
+        </div>
+
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+            <button class="btn-save" onclick="saveEvent()">Guardar</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let nav = 0;
-    // Ahora 'events' es un array de objetos para permitir multiples por dia
-    let events = localStorage.getItem('astroEvents_v2') ? JSON.parse(localStorage.getItem('astroEvents_v2')) : [];
+    let clickedDate = null; // Variable para recordar qué día se clickeó
+    let events = localStorage.getItem('astroEvents_v3') ? JSON.parse(localStorage.getItem('astroEvents_v3')) : [];
+    
+    // --- LISTA DE FERIADOS (Formato: AAAA-MM-DD) ---
+    // Puedes pedirme que rellene esto con el calendario oficial
+    const holidays = [
+        "2024-05-01", 
+        "2024-05-21",
+        "2024-06-20",
+        "2024-12-25" 
+    ];
+
+    const containerModal = document.getElementById('addModal');
+    const inputType = document.getElementById('inputType');
+    const inputCourse = document.getElementById('inputCourse');
+    const dateDisplay = document.getElementById('modalDateDisplay');
 
     function load() {
         const dt = new Date();
+        const today = new Date();
+        today.setHours(0,0,0,0); // Resetear horas para comparar solo fecha
+
         if (nav !== 0) dt.setMonth(new Date().getMonth() + nav);
 
         const month = dt.getMonth();
@@ -215,12 +316,35 @@
             
             if (i > paddingDays) {
                 const dayNum = i - paddingDays;
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                // Truco para asegurar formato 2 digitos (05, 09, etc)
+                const monthStr = String(month + 1).padStart(2, '0');
+                const dayStr = String(dayNum).padStart(2, '0');
+                const dateStr = `${year}-${monthStr}-${dayStr}`;
+                const cellDateObj = new Date(year, month, dayNum);
+
                 square.innerText = dayNum;
 
-                if (dayNum === new Date().getDate() && nav === 0) square.classList.add('today');
+                // 1. Marcar Hoy
+                if (dayNum === new Date().getDate() && year === new Date().getFullYear() && month === new Date().getMonth()) {
+                    square.classList.add('today');
+                }
+
+                // 2. Marcar Feriados
+                if (holidays.includes(dateStr)) {
+                    square.classList.add('holiday');
+                    square.title = "Feriado / Vacaciones";
+                }
+
+                // 3. Chequear si es pasado
+                if (cellDateObj < today) {
+                    square.classList.add('past');
+                    // No agregamos onclick
+                } else {
+                    // Solo permitir click si es hoy o futuro
+                    square.onclick = () => openModal(dateStr);
+                }
                 
-                // Si hay uno o mas eventos en este dia, mostrar indicador
+                // Indicador de eventos
                 const dayEvents = events.filter(e => e.date === dateStr);
                 if (dayEvents.length > 0) {
                     const indicator = document.createElement('div');
@@ -228,7 +352,6 @@
                     square.appendChild(indicator);
                 }
 
-                square.onclick = () => addEvent(dateStr);
             } else {
                 square.style.visibility = 'hidden';
             }
@@ -237,33 +360,42 @@
         renderList();
     }
 
-    function addEvent(dateStr) {
-        const tipo = prompt("Selecciona Tipo:\n1: Prueba\n2: Entrega\n3: Evaluacion Escrita\n4: Evaluacion Oral");
-        let tipoTexto = "";
-        
-        if (tipo === "1") tipoTexto = "Prueba";
-        else if (tipo === "2") tipoTexto = "Entrega";
-        else if (tipo === "3") tipoTexto = "Evaluacion Escrita";
-        else if (tipo === "4") tipoTexto = "Evaluacion Oral";
-        else return;
+    // --- FUNCIONES DEL MODAL ---
+    function openModal(dateStr) {
+        clickedDate = dateStr;
+        dateDisplay.innerText = dateStr.split('-').reverse().join('/'); // Mostrar como DD/MM/AAAA
+        inputCourse.value = ""; // Limpiar input
+        containerModal.style.display = 'flex';
+        inputCourse.focus();
+    }
 
-        const curso = prompt("Nombre del curso / ramo:");
-        if (!curso) return;
+    function closeModal() {
+        containerModal.style.display = 'none';
+        clickedDate = null;
+    }
+
+    function saveEvent() {
+        if (!inputCourse.value.trim()) {
+            alert("Por favor escribe el nombre del ramo.");
+            return;
+        }
 
         events.push({
             id: Date.now(),
-            date: dateStr,
-            type: tipoTexto,
-            course: curso
+            date: clickedDate,
+            type: inputType.value,
+            course: inputCourse.value
         });
 
-        localStorage.setItem('astroEvents_v2', JSON.stringify(events));
+        localStorage.setItem('astroEvents_v3', JSON.stringify(events));
+        closeModal();
         load();
     }
 
+    // --- ELIMINAR Y RENDERIZAR ---
     function deleteEvent(id) {
         events = events.filter(e => e.id !== id);
-        localStorage.setItem('astroEvents_v2', JSON.stringify(events));
+        localStorage.setItem('astroEvents_v3', JSON.stringify(events));
         load();
     }
 
@@ -273,36 +405,46 @@
         const today = new Date();
         today.setHours(0,0,0,0);
 
-        // Ordenar eventos por fecha
         const sorted = events
             .filter(e => new Date(e.date + 'T00:00:00') >= today)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
         if (sorted.length === 0) {
-            list.innerHTML = '<p style="color:#999; font-size:0.9rem;">Sin evaluaciones pendientes.</p>';
+            list.innerHTML = '<p style="color:#999; font-size:0.9rem; text-align:center;">Sin evaluaciones pendientes.</p>';
             return;
         }
 
         sorted.forEach(e => {
             const diff = Math.ceil((new Date(e.date + 'T00:00:00') - today) / (1000*60*60*24));
             let cls = 'chill';
-            if (diff <= 2) cls = 'urgent';
-            else if (diff <= 6) cls = 'soon';
+            if (diff <= 3) cls = 'urgent';
+            else if (diff <= 7) cls = 'soon';
+
+            // Formatear fecha para que se vea bonita (ej: 12-05)
+            const fechaBonita = e.date.split('-').slice(1).reverse().join('/');
 
             const card = document.createElement('div');
             card.className = `event-card ${cls}`;
             card.innerHTML = `
-                <button class="delete-btn" onclick="deleteEvent(${e.id})">X</button>
+                <button class="delete-btn" onclick="deleteEvent(${e.id})">✕</button>
                 <span class="event-type">${e.type}</span>
-                <span class="days-left">${diff === 0 ? 'HOY' : 'Faltan ' + diff + ' dias'}</span>
+                <span class="days-left">${diff === 0 ? '¡ES HOY!' : 'Faltan ' + diff + ' días'}</span>
                 <div class="event-course">${e.course}</div>
-                <div class="event-date">${e.date}</div>
+                <div style="font-size:0.8rem; color:#888; margin-top:5px;">📅 ${fechaBonita}</div>
             `;
             list.appendChild(card);
         });
     }
 
     function changeMonth(dir) { nav += dir; load(); }
+    
+    // Cerrar modal si tocan fuera
+    window.onclick = function(event) {
+        if (event.target == containerModal) {
+            closeModal();
+        }
+    }
+
     load();
 </script>
 
