@@ -7,8 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FFD60A; /* Amarillo USACH (Inicios) */
-            --primary-dark: #FF9F1C; /* Amarillo Ocre (Términos/Plazos) */
+            --primary: #FFD60A; /* Amarillo USACH (Inicio) */
+            --primary-dark: #C7A008; /* Amarillo Dorado Oscuro (Término) - NO NARANJA */
             --text: #333;
             --bg-body: #ffffff;
             --danger: #d32f2f;
@@ -124,7 +124,6 @@
         
         /* --- ESTILOS DE EVENTOS --- */
         
-        /* Feriados: Gris */
         .day-cell.holiday { 
             background-color: var(--gray-holiday);
             color: #999;
@@ -139,10 +138,10 @@
             border: none;
         }
 
-        /* Fin Evento U: Amarillo Oscuro/Ocre */
+        /* Fin Evento U: Amarillo Dorado Oscuro */
         .day-cell.uni-end {
             background-color: var(--primary-dark);
-            color: white; /* Texto blanco para contraste */
+            color: #fff; /* Texto blanco para que se lea bien en el oscuro */
             font-weight: bold;
             border: none;
         }
@@ -155,8 +154,7 @@
             margin-top: 4px;
             border-radius: 2px;
         }
-        /* Ajuste de color de rayita si el fondo es oscuro */
-        .uni-end .event-indicator { background: white; }
+        .uni-end .event-indicator { background: #fff; } /* Rayita blanca en fondo oscuro */
 
         /* PANEL LATERAL */
         .events-panel {
@@ -213,7 +211,7 @@
         .chill { border-left-color: var(--success); }
         .chill .days-left { color: var(--success); }
 
-        /* --- AVISOS DIVERTIDOS (Abajo) --- */
+        /* --- AVISOS (Abajo) --- */
         #alert-section {
             width: 100%;
             max-width: 950px;
@@ -261,7 +259,6 @@
             border: 1px solid #eee;
         }
         
-        /* Caja para mostrar evento universitario en el modal */
         #uniEventDisplay {
             background: var(--primary);
             color: #000;
@@ -272,10 +269,9 @@
             font-weight: bold;
             display: none;
         }
-        /* Si es evento de término, cambia el color de fondo en el modal */
         #uniEventDisplay.is-end {
             background: var(--primary-dark);
-            color: white;
+            color: #fff;
         }
         
         .form-group { margin-bottom: 20px; text-align: left; }
@@ -358,44 +354,40 @@
 <script>
     let nav = 0;
     let clickedDate = null;
-    let events = localStorage.getItem('astroEvents_final_v2') ? JSON.parse(localStorage.getItem('astroEvents_final_v2')) : [];
+    // IMPORTANTE: Cambio a v7 para reiniciar y evitar errores de cache anteriores
+    let events = localStorage.getItem('astroEvents_v7') ? JSON.parse(localStorage.getItem('astroEvents_v7')) : [];
 
-    // --- DATOS USACH 2026 (Extraídos del PDF Oficial) ---
+    // --- DATOS USACH 2026 (Según PDF) ---
     
-    // Feriados Legales + Recesos Universitarios (Interferiados y Fiestas Patrias)
+    // Feriados + Recesos [cite: 31, 32]
     const holidays = [
-        [cite_start]"2026-05-01", // Día del Trabajo [cite: 32]
-        [cite_start]"2026-05-02", "2026-05-22", "2026-05-23", // Interferiados Mayo [cite: 32]
-        [cite_start]"2026-05-21", // Glorias Navales [cite: 32]
-        "2026-06-20", // Pueblos Indígenas
-        "2026-07-16", // Virgen del Carmen
-        [cite_start]"2026-07-17", "2026-07-18", // Interferiados Julio [cite: 32]
-        "2026-08-15", // Asunción
-        [cite_start]"2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", // Receso Fiestas Patrias [cite: 32]
-        "2026-09-18", "2026-09-19", // Feriado Legal Fiestas Patrias
-        "2026-10-12", "2026-10-31", 
-        "2026-11-01", 
-        [cite_start]"2026-12-07", "2026-12-08", "2026-12-25", "2026-12-26", // Interferiados Dic [cite: 32]
-        [cite_start]"2026-05-18", "2026-05-19", "2026-05-20" // Receso Docente (Semana completa 18-23 mayo) [cite: 32]
+        "2026-05-01", "2026-05-02", "2026-05-22", "2026-05-23", 
+        "2026-05-21", "2026-06-20", "2026-07-16", "2026-07-17", "2026-07-18",
+        "2026-08-15", "2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17",
+        "2026-09-18", "2026-09-19", "2026-10-12", "2026-10-31", 
+        "2026-11-01", "2026-12-07", "2026-12-08", "2026-12-25", "2026-12-26",
+        "2026-05-18", "2026-05-19", "2026-05-20"
     ];
 
-    // Eventos Académicos 2026 (Inicio y Término)
-    [cite_start]// Se marcan con inicio y fin según PDF [cite: 24, 30]
+    // Eventos Académicos 
     const academicEvents = [
-        // PRIMER SEMESTRE
-        { start: "2026-03-16", end: "2026-03-29", title: "Matrícula en Línea (Antiguos)", msg: "Es hora de pagar. Realiza tu matrícula antes de que venza el plazo." [cite_start]}, [cite: 24]
-        { start: "2026-03-30", end: "2026-07-17", title: "Matrícula Fuera de Plazo", msg: "Estás jugando con fuego. Última chance para matricularte como rezagado." [cite_start]}, [cite: 24]
-        { start: "2026-03-19", end: "2026-03-29", title: "Inscripción Asignaturas", msg: "Que la suerte esté de tu lado. Consigue cupo en tus ramos antes que se llenen." [cite_start]}, [cite: 24]
-        { start: "2026-03-23", end: "2026-03-27", title: "Postulación Culturales (Ciclo 1)", msg: "¿Quieres deporte o arte? Postula ahora a los cursos de formación integral." [cite_start]}, [cite: 24]
-        { start: "2026-05-29", end: "2026-05-29", title: "Límite Retiro Temporal (S/Causa)", msg: "Último día para congelar el semestre sin tener que dar explicaciones." [cite_start]}, [cite: 24]
-        { start: "2026-07-27", end: "2026-08-14", title: "Cierre Actas 1er Semestre", msg: "Recta final. Revisa que todas tus notas estén subidas al sistema." [cite_start]}, [cite: 24]
+        // 1er Semestre
+        { start: "2026-03-16", end: "2026-03-29", title: "Matrícula en Línea (Antiguos)", msg: "Es hora de pagar. Realiza tu matrícula antes de que venza el plazo." },
+        { start: "2026-03-30", end: "2026-07-17", title: "Matrícula Fuera de Plazo", msg: "Estás jugando con fuego. Última chance para matricularte como rezagado." },
+        { start: "2026-03-19", end: "2026-03-29", title: "Inscripción Asignaturas (Online)", msg: "Que la suerte esté de tu lado. Consigue cupo en tus ramos antes que se llenen." },
+        { start: "2026-03-30", end: "2026-04-10", title: "Inscripción Manual", msg: "Para los valientes que pelean cupo con el jefe de carrera." },
+        { start: "2026-03-30", end: "2026-04-24", title: "Desinscripción Asignaturas", msg: "¿Te arrepentiste? Aún puedes bajar ese ramo imposible." },
+        { start: "2026-03-23", end: "2026-03-27", title: "Postulación Culturales (Ciclo 1)", msg: "¿Quieres deporte o arte? Postula ahora a los cursos de formación integral." },
+        { start: "2026-05-29", end: "2026-05-29", title: "Límite Retiro Temporal (S/Causa)", msg: "Último día para congelar el semestre sin tener que dar explicaciones." },
+        { start: "2026-06-26", end: "2026-06-26", title: "Límite Retiro Temp (C/Causa)", msg: "Plazo final para retiro temporal justificado." },
+        { start: "2026-08-14", end: "2026-08-14", title: "Cierre Actas 1er Semestre", msg: "Recta final. Revisa que todas tus notas estén subidas al sistema." },
 
-        // SEGUNDO SEMESTRE
-        { start: "2026-08-17", end: "2026-09-20", title: "Matrícula 2do Semestre", msg: "Vuelta a la carga. Matricúlate para la segunda mitad del año." [cite_start]}, [cite: 30]
-        { start: "2026-08-20", end: "2026-09-20", title: "Inscripción Asignaturas 2do Sem", msg: "Elige sabiamente. Organiza tu horario para el segundo semestre." [cite_start]}, [cite: 30]
-        { start: "2026-09-21", end: "2026-12-31", title: "Matrícula Fuera de Plazo 2do Sem", msg: "Periodo de rezagados para el segundo semestre." [cite_start]}, [cite: 30]
-        { start: "2026-11-13", end: "2026-11-13", title: "Límite Retiro Temporal (S/Causa)", msg: "Fecha límite para retiro temporal del segundo semestre." [cite_start]}, [cite: 30]
-        { start: "2027-01-11", end: "2027-01-16", title: "Cierre Actas 2do Semestre", msg: "¡Se acaba el año! Revisa tus notas finales." [cite_start]} [cite: 30]
+        // 2do Semestre
+        { start: "2026-08-17", end: "2026-09-20", title: "Matrícula 2do Semestre", msg: "Vuelta a la carga. Matricúlate para la segunda mitad del año." },
+        { start: "2026-08-20", end: "2026-09-20", title: "Inscripción Asignaturas 2do Sem", msg: "Elige sabiamente. Organiza tu horario para el segundo semestre." },
+        { start: "2026-09-21", end: "2026-12-31", title: "Matrícula Fuera de Plazo 2do Sem", msg: "Periodo de rezagados para el segundo semestre." },
+        { start: "2026-11-13", end: "2026-11-13", title: "Límite Retiro Temporal (S/Causa)", msg: "Fecha límite para retiro temporal del segundo semestre." },
+        { start: "2027-01-16", end: "2027-01-16", title: "Cierre Actas 2do Semestre", msg: "¡Se acaba el año! Revisa tus notas finales." }
     ];
 
     const containerModal = document.getElementById('addModal');
@@ -413,10 +405,12 @@
         const firstDay = new Date(year, month, 1);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         
-        // Ajuste para empezar en Lunes (0 = Lunes, 6 = Domingo en nuestra lógica visual)
-        // JS getDay(): 0=Dom, 1=Lun...
-        const dayOfWeek = firstDay.getDay(); 
-        const paddingDays = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        // --- CORRECCIÓN LUNES (Bug Fixed) ---
+        // JS: 0=Dom, 1=Lun, 2=Mar...
+        // Queremos: 0=Lun, ... 6=Dom
+        let dayOfWeek = firstDay.getDay(); 
+        if(dayOfWeek === 0) dayOfWeek = 7; // Si es domingo (0), lo volvemos 7
+        const paddingDays = dayOfWeek - 1; // Restamos 1 para que Lunes (1) sea padding 0
 
         document.getElementById('monthDisplay').innerText = `${dt.toLocaleDateString('es-ES', { month: 'long' })} ${year}`;
         const calendar = document.getElementById('calendarGrid');
@@ -441,14 +435,14 @@
 
                 square.innerText = dayNum;
 
-                // 1. Feriados (GRIS)
+                // 1. Feriados
                 if (holidays.includes(dateStr)) square.classList.add('holiday');
 
-                // 2. Eventos U (AMARILLO y AMARILLO OSCURO)
+                // 2. Eventos U (Inicio vs Termino)
                 const startEvent = academicEvents.find(e => e.start === dateStr);
                 const endEvent = academicEvents.find(e => e.end === dateStr);
 
-                // Prioridad visual: Fin > Inicio
+                // Prioridad visual: Si un día coincide inicio y fin, mostramos fin (urgencia)
                 if (endEvent) {
                     square.classList.add('uni-end');
                     square.dataset.uniTitle = "PLAZO FINAL: " + endEvent.title;
@@ -463,7 +457,7 @@
                 if (dayNum === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) 
                     square.classList.add('today');
 
-                // 4. Bloqueo días pasados
+                // 4. Pasado vs Futuro
                 if (cellDateObj < today) {
                     square.classList.add('past');
                 } else {
@@ -472,7 +466,7 @@
                     square.onclick = () => openModal(dateStr, uniTitle, uniType);
                 }
                 
-                // 5. Tus Eventos (RAYA NEGRA ABAJO)
+                // 5. Tus Eventos
                 const dayEvents = events.filter(e => e.date === dateStr);
                 if (dayEvents.length > 0) {
                     const indicator = document.createElement('div');
@@ -490,24 +484,23 @@
 
     function renderAlerts() {
         const today = new Date();
-        // today.setFullYear(2026, 2, 28); // DESCOMENTAR PARA PROBAR ALERTAS
+        // today.setFullYear(2026, 2, 28); // DESCOMENTAR PARA PROBAR
 
         alertSection.innerHTML = ''; 
         academicEvents.forEach(evt => {
             const start = new Date(evt.start + 'T00:00:00');
             const end = new Date(evt.end + 'T23:59:59');
             const alertStart = new Date(start);
-            alertStart.setDate(start.getDate() - 7);
+            alertStart.setDate(start.getDate() - 7); // Avisar 7 días antes
 
             if (today >= alertStart && today <= end) {
                 const box = document.createElement('div');
                 box.className = 'alert-box';
                 let timeText = "ESTÁ SUCEDIENDO";
                 
-                // Mensaje diferente si es el último día
                 if (today.toDateString() === end.toDateString()) {
                      timeText = "¡TERMINA HOY!";
-                     box.style.borderLeftColor = "var(--primary-dark)"; // Borde oscuro alerta
+                     box.style.borderLeftColor = "var(--primary-dark)";
                 } else if (today < start) {
                     const diff = Math.ceil((start - today) / (1000*60*60*24));
                     timeText = `COMIENZA EN ${diff} DÍAS`;
@@ -533,11 +526,8 @@
         if (uniTitle) {
             uniEventDisplay.style.display = 'block';
             uniEventDisplay.innerText = "¡ATENCIÓN! " + uniTitle;
-            
-            // Cambiar color si es término
             if(uniType === 'end') uniEventDisplay.classList.add('is-end');
             else uniEventDisplay.classList.remove('is-end');
-            
         } else {
             uniEventDisplay.style.display = 'none';
         }
@@ -554,14 +544,14 @@
         if (!course.trim()) return alert("Falta el nombre de la asignatura");
 
         events.push({ id: Date.now(), date: clickedDate, type: type, course: course });
-        localStorage.setItem('astroEvents_final_v2', JSON.stringify(events));
+        localStorage.setItem('astroEvents_v7', JSON.stringify(events));
         closeModal();
         load();
     }
 
     function deleteEvent(id) {
         events = events.filter(e => e.id !== id);
-        localStorage.setItem('astroEvents_final_v2', JSON.stringify(events));
+        localStorage.setItem('astroEvents_v7', JSON.stringify(events));
         load();
     }
 
