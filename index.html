@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendario Académico - Astrofísica</title>
+    <title>Calendario Academico - Astrofisica</title>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,20 +26,40 @@
             align-items: center;
         }
 
-        .main-container {
-            max-width: 900px;
+        /* Menu de Navegacion */
+        nav {
+            text-align: center; 
+            padding: 15px; 
+            background: var(--primary); 
+            margin-bottom: 30px; 
+            border-radius: 15px; 
             width: 100%;
-            display: grid;
-            grid-template-columns: 2fr 1fr; /* Calendario | Lista */
-            gap: 30px;
+            max-width: 900px;
+        }
+        nav a {
+            color: white; 
+            text-decoration: none; 
+            margin: 0 15px; 
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
-        /* --- CALENDARIO --- */
+        .main-container {
+            max-width: 950px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* CALENDARIO */
         .calendar-box {
             background: white;
             border-radius: 20px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
         }
 
         .header {
@@ -50,107 +70,90 @@
         }
 
         .month-title {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             text-transform: uppercase;
             font-weight: 700;
-            color: var(--primary);
-            text-shadow: 1px 1px 0px #ddd;
+            color: var(--text);
         }
 
         .nav-btn {
             background: #333;
             color: white;
             border: none;
-            padding: 5px 15px;
-            border-radius: 50px;
+            padding: 5px 12px;
+            border-radius: 5px;
             cursor: pointer;
             font-family: 'Oswald';
-            font-size: 1.2rem;
         }
-        .nav-btn:hover { background: var(--primary); color: #333; }
 
         .grid-days {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 5px;
-            text-align: center;
         }
 
         .day-name {
             font-weight: bold;
             color: #888;
+            font-size: 0.9rem;
+            text-align: center;
             padding-bottom: 10px;
         }
 
         .day-cell {
-            height: 60px;
-            border-radius: 10px;
-            border: 1px solid #f0f0f0;
+            height: 50px;
+            border-radius: 8px;
+            border: 1px solid #f4f4f4;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: 0.2s;
-            position: relative;
+            font-size: 1rem;
         }
 
-        .day-cell:hover { background-color: #fffde7; border-color: var(--primary); }
-        
-        .day-cell.today {
-            border: 2px solid var(--primary);
-            font-weight: bold;
-        }
+        .day-cell.today { border: 2px solid var(--primary); font-weight: bold; }
+        .day-cell.has-event { background-color: var(--primary); color: white; border: none; }
 
-        .day-cell.has-event {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-        }
-
-        .event-dot {
-            height: 6px;
-            width: 6px;
-            background-color: white;
-            border-radius: 50%;
-            margin-top: 4px;
-            display: none;
-        }
-        .has-event .event-dot { display: block; }
-
-        /* --- LISTA DE CUENTA REGRESIVA --- */
+        /* PANEL LATERAL FIJO */
         .events-panel {
-            background: #f9f9f9;
+            background: #ffffff;
             border-radius: 20px;
-            padding: 25px;
+            padding: 20px;
             border: 2px solid var(--primary);
+            max-height: 500px; /* Altura fija */
+            display: flex;
+            flex-direction: column;
         }
 
-        h2 { margin-top: 0; text-transform: uppercase; font-size: 1.4rem; }
+        .events-panel h2 { 
+            margin: 0 0 15px 0; 
+            font-size: 1.2rem; 
+            text-transform: uppercase; 
+        }
+
+        .scroll-area {
+            overflow-y: auto; /* Scroll si hay muchos eventos */
+            padding-right: 5px;
+        }
+
+        /* Estetica del scrollbar */
+        .scroll-area::-webkit-scrollbar { width: 6px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
         .event-card {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
             margin-bottom: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border-left: 5px solid #ccc;
-            animation: popIn 0.3s ease;
+            border-left: 4px solid #ccc;
         }
 
-        @keyframes popIn { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+        .days-left { font-size: 1.1rem; font-weight: bold; display: block; }
+        .event-title { font-size: 0.9rem; color: #444; text-transform: uppercase; }
+        .event-date { font-size: 0.75rem; color: #999; }
 
-        .days-left {
-            font-size: 1.5rem;
-            font-weight: bold;
-            display: block;
-        }
-        .event-title { font-size: 1rem; color: #555; }
-        .event-date { font-size: 0.8rem; color: #999; }
-
-        /* Colores de urgencia */
         .urgent { border-left-color: var(--danger); color: var(--danger); }
-        .soon { border-left-color: var(--warning); color: #d48806; }
+        .soon { border-left-color: var(--warning); color: #b08900; }
         .chill { border-left-color: var(--success); color: var(--success); }
 
         @media (max-width: 768px) {
@@ -160,184 +163,119 @@
 </head>
 <body>
 
+<nav>
+    <a href="index.html">Notas</a>
+    <a href="horario.html">Horario</a>
+    <a href="calendario.html">Fechas</a>
+</nav>
+
 <div class="main-container">
     
     <div class="calendar-box">
         <div class="header">
-            <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+            <button class="nav-btn" onclick="changeMonth(-1)">ANTERIOR</button>
             <div class="month-title" id="monthDisplay"></div>
-            <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+            <button class="nav-btn" onclick="changeMonth(1)">SIGUIENTE</button>
         </div>
-
-        <div class="grid-days" id="calendarGrid">
-            </div>
-        <p style="text-align: center; color: #999; font-size: 0.9rem; margin-top: 15px;">
-            Haz clic en un día para agregar o borrar eventos.
-        </p>
+        <div class="grid-days" id="calendarGrid"></div>
     </div>
 
     <div class="events-panel">
-        <h2>⏳ Próximas Evaluaciones</h2>
-        <div id="countdownList">
-            <p style="color:#777">No hay eventos próximos.</p>
-        </div>
+        <h2>Proximas Evaluaciones</h2>
+        <div class="scroll-area" id="countdownList">
+            </div>
     </div>
 
 </div>
 
 <script>
-    let nav = 0; // Navegación de meses
-    let clicked = null;
-    let events = localStorage.getItem('misEventos') ? JSON.parse(localStorage.getItem('misEventos')) : {};
-
-    const calendar = document.getElementById('calendarGrid');
-    const monthDisplay = document.getElementById('monthDisplay');
-    const countdownList = document.getElementById('countdownList');
-    const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    let nav = 0;
+    let events = localStorage.getItem('misEventosAstro') ? JSON.parse(localStorage.getItem('misEventosAstro')) : {};
 
     function load() {
         const dt = new Date();
+        if (nav !== 0) dt.setMonth(new Date().getMonth() + nav);
 
-        if (nav !== 0) {
-            dt.setMonth(new Date().getMonth() + nav);
-        }
-
-        const day = dt.getDate();
         const month = dt.getMonth();
         const year = dt.getFullYear();
-
-        const firstDayOfMonth = new Date(year, month, 1);
+        const firstDay = new Date(year, month, 1);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
-        const dateString = firstDayOfMonth.toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-        });
-        const paddingDays = firstDayOfMonth.getDay();
+        const paddingDays = firstDay.getDay();
 
-        monthDisplay.innerText = `${dt.toLocaleDateString('es-ES', { month: 'long' })} ${year}`;
-
+        document.getElementById('monthDisplay').innerText = `${dt.toLocaleDateString('es-ES', { month: 'long' })} ${year}`;
+        const calendar = document.getElementById('calendarGrid');
         calendar.innerHTML = '';
 
-        // Cabecera de días
-        diasSemana.forEach(dia => {
+        ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'].forEach(d => {
             const div = document.createElement('div');
-            div.classList.add('day-name');
-            div.innerText = dia;
+            div.className = 'day-name';
+            div.innerText = d;
             calendar.appendChild(div);
         });
 
-        // Días vacíos previos
-        for(let i = 1; i <= paddingDays; i++) {
-            const daySquare = document.createElement('div');
-            daySquare.classList.add('day-cell');
-            daySquare.style.visibility = 'hidden';
-            calendar.appendChild(daySquare);
-        }
-
-        // Días del mes
-        for(let i = 1; i <= daysInMonth; i++) {
-            const daySquare = document.createElement('div');
-            daySquare.classList.add('day-cell');
-            daySquare.innerText = i;
-
-            const dayString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        for(let i = 1; i <= paddingDays + daysInMonth; i++) {
+            const square = document.createElement('div');
+            square.className = 'day-cell';
             
-            // Marcar día actual
-            const today = new Date();
-            if (i === today.getDate() && nav === 0) {
-                daySquare.classList.add('today');
+            if (i > paddingDays) {
+                const dayNum = i - paddingDays;
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                square.innerText = dayNum;
+
+                if (dayNum === new Date().getDate() && nav === 0) square.classList.add('today');
+                if (events[dateStr]) square.classList.add('has-event');
+
+                square.onclick = () => {
+                    const val = prompt("Nombre de la evaluacion (Prueba, Entrega, Presentacion):", events[dateStr] || "");
+                    if (val === null) return;
+                    if (val === "") delete events[dateStr];
+                    else events[dateStr] = val;
+                    localStorage.setItem('misEventosAstro', JSON.stringify(events));
+                    load();
+                };
+            } else {
+                square.style.visibility = 'hidden';
             }
-
-            // Marcar evento
-            if (events[dayString]) {
-                daySquare.classList.add('has-event');
-                const dot = document.createElement('div');
-                dot.classList.add('event-dot');
-                daySquare.appendChild(dot);
-                
-                // Tooltip simple
-                daySquare.title = events[dayString];
-            }
-
-            daySquare.addEventListener('click', () => openModal(dayString));
-            calendar.appendChild(daySquare);
+            calendar.appendChild(square);
         }
-
-        renderCountdown();
+        renderList();
     }
 
-    function openModal(date) {
-        // Uso prompt para mantenerlo simple y funcional sin mucho código extra
-        const currentEvent = events[date];
-        let msg = `📅 Fecha: ${date}\n`;
-        if (currentEvent) msg += `Evento actual: "${currentEvent}"\n\n¿Quieres cambiarlo o borrarlo? (Deja vacío para borrar)`;
-        else msg += `Escribe el nombre del Certamen o Entrega:`;
-
-        const newEvent = prompt(msg, currentEvent || '');
-
-        if (newEvent === null) return; // Cancelar
-
-        if (newEvent === '') {
-            delete events[date];
-        } else {
-            events[date] = newEvent;
-        }
-
-        localStorage.setItem('misEventos', JSON.stringify(events));
-        load();
-    }
-
-    function changeMonth(x) {
-        nav += x;
-        load();
-    }
-
-    function renderCountdown() {
-        countdownList.innerHTML = '';
+    function renderList() {
+        const list = document.getElementById('countdownList');
+        list.innerHTML = '';
         const today = new Date();
         today.setHours(0,0,0,0);
 
-        // Convertir objeto de eventos a array y ordenar por fecha
-        const sortedEvents = Object.keys(events)
-            .map(date => ({ date: date, title: events[date] }))
-            .filter(e => new Date(e.date + 'T00:00:00') >= today) // Solo futuros o hoy
+        const sorted = Object.keys(events)
+            .map(d => ({ date: d, title: events[d] }))
+            .filter(e => new Date(e.date + 'T00:00:00') >= today)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        if (sortedEvents.length === 0) {
-            countdownList.innerHTML = '<p style="color:#777">¡Libre! No hay evaluaciones próximas.</p>';
+        if (sorted.length === 0) {
+            list.innerHTML = '<p style="color:#999; font-size:0.9rem;">Sin evaluaciones pendientes.</p>';
             return;
         }
 
-        sortedEvents.forEach(e => {
-            const eventDate = new Date(e.date + 'T00:00:00');
-            const diffTime = eventDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-
-            let colorClass = 'chill';
-            let textoDias = `Faltan ${diffDays} días`;
-
-            if (diffDays === 0) {
-                textoDias = "¡Es HOY!";
-                colorClass = 'urgent';
-            } else if (diffDays <= 3) {
-                colorClass = 'urgent'; // Rojo
-            } else if (diffDays <= 7) {
-                colorClass = 'soon'; // Naranja/Amarillo
-            }
+        sorted.forEach(e => {
+            const diff = Math.ceil((new Date(e.date + 'T00:00:00') - today) / (1000*60*60*24));
+            let cls = 'chill';
+            if (diff === 0) cls = 'urgent';
+            else if (diff <= 3) cls = 'urgent';
+            else if (diff <= 7) cls = 'soon';
 
             const card = document.createElement('div');
-            card.className = `event-card ${colorClass}`;
+            card.className = `event-card ${cls}`;
             card.innerHTML = `
-                <span class="days-left">${textoDias}</span>
+                <span class="days-left">${diff === 0 ? 'HOY' : 'Faltan ' + diff + ' dias'}</span>
                 <div class="event-title">${e.title}</div>
                 <div class="event-date">${e.date}</div>
             `;
-            countdownList.appendChild(card);
+            list.appendChild(card);
         });
     }
 
+    function changeMonth(dir) { nav += dir; load(); }
     load();
 </script>
 
