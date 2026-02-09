@@ -22,26 +22,7 @@
             margin: 0;
             padding: 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Menu de Navegacion */
-        nav {
-            text-align: center; 
-            padding: 15px; 
-            background: var(--primary); 
-            margin-bottom: 30px; 
-            border-radius: 15px; 
-            width: 100%;
-            max-width: 900px;
-        }
-        nav a {
-            color: white; 
-            text-decoration: none; 
-            margin: 0 15px; 
-            font-weight: bold;
-            text-transform: uppercase;
+            justify-content: center;
         }
 
         .main-container {
@@ -73,7 +54,6 @@
             font-size: 1.6rem;
             text-transform: uppercase;
             font-weight: 700;
-            color: var(--text);
         }
 
         .nav-btn {
@@ -101,18 +81,28 @@
         }
 
         .day-cell {
-            height: 50px;
+            height: 65px;
             border-radius: 8px;
             border: 1px solid #f4f4f4;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             font-size: 1rem;
+            transition: 0.2s;
         }
 
+        .day-cell:hover { background-color: #fffde7; }
         .day-cell.today { border: 2px solid var(--primary); font-weight: bold; }
-        .day-cell.has-event { background-color: var(--primary); color: white; border: none; }
+        
+        .event-indicator {
+            width: 80%;
+            height: 4px;
+            background: var(--primary);
+            margin-top: 4px;
+            border-radius: 2px;
+        }
 
         /* PANEL LATERAL FIJO */
         .events-panel {
@@ -120,7 +110,7 @@
             border-radius: 20px;
             padding: 20px;
             border: 2px solid var(--primary);
-            max-height: 500px; /* Altura fija */
+            max-height: 550px;
             display: flex;
             flex-direction: column;
         }
@@ -132,12 +122,11 @@
         }
 
         .scroll-area {
-            overflow-y: auto; /* Scroll si hay muchos eventos */
+            overflow-y: auto;
             padding-right: 5px;
         }
 
-        /* Estetica del scrollbar */
-        .scroll-area::-webkit-scrollbar { width: 6px; }
+        .scroll-area::-webkit-scrollbar { width: 4px; }
         .scroll-area::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
         .event-card {
@@ -146,11 +135,24 @@
             border-radius: 8px;
             margin-bottom: 10px;
             border-left: 4px solid #ccc;
+            position: relative;
         }
 
-        .days-left { font-size: 1.1rem; font-weight: bold; display: block; }
-        .event-title { font-size: 0.9rem; color: #444; text-transform: uppercase; }
-        .event-date { font-size: 0.75rem; color: #999; }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .delete-btn:hover { color: var(--danger); }
+
+        .days-left { font-size: 1rem; font-weight: bold; display: block; }
+        .event-type { font-size: 0.7rem; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .event-course { font-size: 0.9rem; color: #444; }
 
         .urgent { border-left-color: var(--danger); color: var(--danger); }
         .soon { border-left-color: var(--warning); color: #b08900; }
@@ -162,12 +164,6 @@
     </style>
 </head>
 <body>
-
-<nav>
-    <a href="index.html">Notas</a>
-    <a href="horario.html">Horario</a>
-    <a href="calendario.html">Fechas</a>
-</nav>
 
 <div class="main-container">
     
@@ -181,16 +177,16 @@
     </div>
 
     <div class="events-panel">
-        <h2>Proximas Evaluaciones</h2>
-        <div class="scroll-area" id="countdownList">
-            </div>
+        <h2>Evaluaciones Proximas</h2>
+        <div class="scroll-area" id="countdownList"></div>
     </div>
 
 </div>
 
 <script>
     let nav = 0;
-    let events = localStorage.getItem('misEventosAstro') ? JSON.parse(localStorage.getItem('misEventosAstro')) : {};
+    // Ahora 'events' es un array de objetos para permitir multiples por dia
+    let events = localStorage.getItem('astroEvents_v2') ? JSON.parse(localStorage.getItem('astroEvents_v2')) : [];
 
     function load() {
         const dt = new Date();
@@ -223,16 +219,16 @@
                 square.innerText = dayNum;
 
                 if (dayNum === new Date().getDate() && nav === 0) square.classList.add('today');
-                if (events[dateStr]) square.classList.add('has-event');
+                
+                // Si hay uno o mas eventos en este dia, mostrar indicador
+                const dayEvents = events.filter(e => e.date === dateStr);
+                if (dayEvents.length > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'event-indicator';
+                    square.appendChild(indicator);
+                }
 
-                square.onclick = () => {
-                    const val = prompt("Nombre de la evaluacion (Prueba, Entrega, Presentacion):", events[dateStr] || "");
-                    if (val === null) return;
-                    if (val === "") delete events[dateStr];
-                    else events[dateStr] = val;
-                    localStorage.setItem('misEventosAstro', JSON.stringify(events));
-                    load();
-                };
+                square.onclick = () => addEvent(dateStr);
             } else {
                 square.style.visibility = 'hidden';
             }
@@ -241,14 +237,44 @@
         renderList();
     }
 
+    function addEvent(dateStr) {
+        const tipo = prompt("Selecciona Tipo:\n1: Prueba\n2: Entrega\n3: Evaluacion Escrita\n4: Evaluacion Oral");
+        let tipoTexto = "";
+        
+        if (tipo === "1") tipoTexto = "Prueba";
+        else if (tipo === "2") tipoTexto = "Entrega";
+        else if (tipo === "3") tipoTexto = "Evaluacion Escrita";
+        else if (tipo === "4") tipoTexto = "Evaluacion Oral";
+        else return;
+
+        const curso = prompt("Nombre del curso / ramo:");
+        if (!curso) return;
+
+        events.push({
+            id: Date.now(),
+            date: dateStr,
+            type: tipoTexto,
+            course: curso
+        });
+
+        localStorage.setItem('astroEvents_v2', JSON.stringify(events));
+        load();
+    }
+
+    function deleteEvent(id) {
+        events = events.filter(e => e.id !== id);
+        localStorage.setItem('astroEvents_v2', JSON.stringify(events));
+        load();
+    }
+
     function renderList() {
         const list = document.getElementById('countdownList');
         list.innerHTML = '';
         const today = new Date();
         today.setHours(0,0,0,0);
 
-        const sorted = Object.keys(events)
-            .map(d => ({ date: d, title: events[d] }))
+        // Ordenar eventos por fecha
+        const sorted = events
             .filter(e => new Date(e.date + 'T00:00:00') >= today)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -260,15 +286,16 @@
         sorted.forEach(e => {
             const diff = Math.ceil((new Date(e.date + 'T00:00:00') - today) / (1000*60*60*24));
             let cls = 'chill';
-            if (diff === 0) cls = 'urgent';
-            else if (diff <= 3) cls = 'urgent';
-            else if (diff <= 7) cls = 'soon';
+            if (diff <= 2) cls = 'urgent';
+            else if (diff <= 6) cls = 'soon';
 
             const card = document.createElement('div');
             card.className = `event-card ${cls}`;
             card.innerHTML = `
+                <button class="delete-btn" onclick="deleteEvent(${e.id})">X</button>
+                <span class="event-type">${e.type}</span>
                 <span class="days-left">${diff === 0 ? 'HOY' : 'Faltan ' + diff + ' dias'}</span>
-                <div class="event-title">${e.title}</div>
+                <div class="event-course">${e.course}</div>
                 <div class="event-date">${e.date}</div>
             `;
             list.appendChild(card);
