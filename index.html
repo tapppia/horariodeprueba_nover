@@ -219,13 +219,14 @@
         }
 
         .alert-box {
-            background: #222;
-            color: white;
+            background: #ffffff; /* ¡Cambiado a blanco! */
+            color: #333;
             padding: 25px;
             margin-bottom: 20px;
             border-radius: 20px;
+            border: 2px solid var(--primary); /* Añadido borde para que no se pierda */
             border-left: 10px solid var(--primary);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
             animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -233,16 +234,16 @@
             text-transform: uppercase;
             font-weight: bold;
             font-size: 1.2rem;
-            color: var(--primary);
+            color: #000; /* Negro para que resalte en el fondo claro */
             margin-bottom: 8px;
             letter-spacing: 1px;
         }
 
         .alert-msg {
-            font-weight: 300;
+            font-weight: 400; /* Un poco más de peso para que se lea mejor */
             font-size: 1.05rem;
             line-height: 1.5;
-            color: #e0e0e0;
+            color: #444; /* Gris oscuro en lugar del color claro anterior */
         }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -359,7 +360,7 @@
 
     // --- DATOS USACH 2026 (Según PDF) ---
     
-    // Feriados + Recesos [cite: 31, 32]
+    // Feriados + Recesos
     const holidays = [
         "2026-05-01", "2026-05-02", "2026-05-22", "2026-05-23", 
         "2026-05-21", "2026-06-20", "2026-07-16", "2026-07-17", "2026-07-18",
@@ -506,10 +507,11 @@
                     timeText = `COMIENZA EN ${diff} DÍAS`;
                 }
 
+                // ¡AQUÍ ESTÁ EL CAMBIO! -> || en lugar de // y quitamos la cursiva a la fecha
                 box.innerHTML = `
-                    <div class="alert-title">${evt.title} // ${timeText}</div>
+                    <div class="alert-title">${evt.title} || ${timeText}</div>
                     <div class="alert-msg">${evt.msg}</div>
-                    <div style="font-size:0.8rem; margin-top:10px; opacity:0.6; font-style:italic;">
+                    <div style="font-size:0.8rem; margin-top:10px; color:#666;">
                         ${evt.start.split('-').reverse().join('/')} - ${evt.end.split('-').reverse().join('/')}
                     </div>
                 `;
